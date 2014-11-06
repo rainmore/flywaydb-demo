@@ -10,8 +10,8 @@
         <link href="//fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,600,700&subset=latin,cyrillic-ext,greek-ext,greek,latin-ext,cyrillic" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="bower_components/reveal.js/css/reveal.min.css">
         <link rel="stylesheet" href="bower_components/reveal.js/css/theme/moon.css">
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.3/styles/tomorrow-night-bright.min.css">
-        <link rel="stylesheet" href="css/theme.css">
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.3/styles/tomorrow.min.css">
+        <link rel="stylesheet" href="/styles/theme.css">
 
         <!-- build:css styles/vendor.css -->
         <!-- bower:css -->
@@ -58,12 +58,76 @@
                 </section>
                 <section>
                     <section>
-                        <h2>Why Database Evolve</h2>
+                        <h1>Why Database Evolve</h1>
                     </section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
+                    <section>
+                        <h2>Why Database Evolve</h2>
+                        <div>
+                            <img src="/images/chart-001.png" style="width: 20%;" />
+                        </div>
+                        <h3>Initial Setup</h3>
+                    </section>
+                    <section>
+                        <h2>Why Database Evolve</h2>
+                        <table>
+                            <tr class="center">
+                                <td width="25%"><img src="/images/chart-001.png" style="width:30%" /></td>
+                                <td width="25%"><img src="/images/chart-001.png" style="width:40%" /></td>
+                                <td width="25%"><img src="/images/chart-001.png" style="width:50%" /></td>
+                                <td width="25%"><img src="/images/chart-001.png" style="width:60%" /></td>
+                            </tr>
+                            <tr class="center">
+                                <td>Development Setup</td>
+                                <td>QA Setup</td>
+                                <td>Integration Setup</td>
+                                <td>Production Setup</td>
+                            </tr>
+                        </table>
+                        <br />
+                        <h3>Different environments</h3>
+                        <h3>Real world scenario</h3>
+                    </section>
+                    <section>
+                        <h2>Source Code vs Database in maintenance</h2>
+                        <table>
+                            <tr>
+                                <th>Source code</th>
+                                <th>Database</th>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <ul>
+                                        <li>
+                                            VCS (git, svn...)
+                                        </li>
+                                        <li>
+                                            Gradle, Maven, Jenkins and CI
+                                        </li>
+                                        <li>
+                                           Release and tagging
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul>
+                                        <li>
+                                            What's the current state?
+                                        </li>
+                                        <li>
+                                            What scripts are applied?
+                                        </li>
+                                        <li>
+                                            How to apply a quick fix on production after dev machine?
+                                        </li>
+                                        <li>
+                                            How to setup new DB instance?
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </section>
                 </section>
                 <section>
                     <section>
@@ -96,22 +160,190 @@
                     <section>
                         <h1>How can we use it in the platform?</h1>
                     </section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
+                    <section>
+                        <h2>Gradle Plugin</h2>
+                        <ul>
+                            <li>It always guarantees the database is clean</li>
+                            <li>The process can be easily configured to run before the testing through Gradle plugin. </li>
+                        </ul>
+                        <code class="hl">
+                        <pre class="java">
+def flywayConfig() {
+    def dbConfig = config.system.db
+
+    project.ext['flyway.user']=dbConfig.user
+    project.ext['flyway.password']=dbConfig.pass
+    project.ext['flyway.url']=String.format('%s:%s://%s:%s/%s', dbConfig.protocol, dbConfig.scheme, dbConfig.host, dbConfig.port, dbConfig.name)
+    project.ext['flyway.driver']=dbConfig.driver
+    project.ext['flyway.table']='_schemaVersions'
+}
+
+flywayConfig()
+
+task dbClean(dependsOn: 'classes') << {
+    flywayClean.execute()
+    flywayMigrate.execute()
+}
+                        </pre>
+                        </code>
+                    </section>
+                    <section>
+                        <h2>Gradle Plugin</h2>
+                        <br />
+                        <br />
+                        <blockquote>Why depends on `classes`?</blockquote>
+                    </section>
+                    <section>
+                        <h2>Gradle Plugin</h2>
+                        <p>
+                            <a href="/images/javaPluginTasks.png" target="_blank"><img src="/images/javaPluginTasks.png" /></a>
+                            <a href="/images/scalaPluginTasks.png" target="_blank"><img src="/images/scalaPluginTasks.png" /></a>
+                        </p>
+                        <ul>
+                            <li>http://www.gradle.org/docs/current/userguide/java_plugin.html</li>
+                            <li>http://www.gradle.org/docs/current/userguide/scala_plugin.html</li>
+                        </ul>
+
+                    </section>
+                    <section>
+                        <h2>Gradle Plugin</h2>
+                        <code class="hl">
+                            <!--
+configurations {
+    deepthought
+}
+
+dependencies {
+    compile group: 'org.flywaydb', name: 'flyway-gradle-plugin', version: project.ext.get('flyway.version')
+    deepthought (group: 'com.worldmanager', name: 'deepthought', version: project.ext.get('wm.deepthought.version'), classifier: 'fat') {
+        exclude module: '*'
+    }
+}
+                             -->
+                            <pre class="java">
+
+
+task deepthought(
+        type: org.gradle.api.tasks.JavaExec) {
+    def dbConfig = config.system.db
+    classpath = configurations.deepthought
+
+    systemProperties = [
+        'dataSource.host': dbConfig.host,
+        'dataSource.name': dbConfig.name,
+        'dataSource.user': dbConfig.user,
+        'dataSource.pass': dbConfig.pass
+    ]
+
+    main = 'com.worldmanager.deepthought.StatsCache'
+}
+
+task dbClean(dependsOn: 'classes') << {
+    flywayClean.execute()
+    flywayMigrate.execute()
+    deepthought.execute()
+}
+
+                            </pre>
+                        </code>
+                    </section>
+                    <section>
+                        <h2>Application API</h2>
+                        <br />
+                        <br />
+                        <blockquote>
+                            Is that hard to implement?
+                        </blockquote>
+                        <br />
+                        <blockquote>
+                            Will it break existing code?
+                        </blockquote>
+                    </section>
+                    <section>
+                        <h2>Application API</h2>
+                        <br />
+
+                        <blockquote>
+                            It is your <b>one-stop shop</b> for working with Flyway programmatically.
+                            It serves both as a <b>configuration</b> and a <b>launching point</b> for all of Flyway's functions.
+                        </blockquote>
+
+                        <br />
+                        <br />
+                        <ul>
+                            <li>
+                                http://flywaydb.org/documentation/api/
+                            </li>
+                        </ul>
+
+
+                    </section>
+                    <section>
+                        <h2>Application API -- "One-stop shop"</h2>
+                        <h3>Programmatic Configuration</h3>
+                        <code class="hl">
+                        <pre class="java">
+import org.flywaydb.core.Flyway;
+
+...
+Flyway flyway = new Flyway();
+flyway.setDataSource(...);
+flyway.migrate();
+
+// Start the rest of the application (incl. Hibernate)
+...
+                        </pre>
+                        </code>
+
+                    </section>
+                    <section>
+                        <h2>Application API -- "One-stop shop"</h2>
+                        <h3>Spring Configuration</h3>
+                        <code class="hl">
+                        <pre class="scala">
+import org.flywaydb.core.Flyway;
+
+...
+
+@Bean(initMethod = "migrate")
+def flyway: Flyway = {
+    val flyway = new Flyway
+    flyway.setTable("_schemaVersions");
+    flyway.setDataSource(defaultDataSource)
+
+    flyway
+}
+
+...
+                        </pre>
+                        </code>
+
+                    </section>
+                    <section>
+                        <h2>What do we for releasing...</h2>
+                    </section>
+                    <section>
+                        <h2>What do we for releasing...</h2>
+                        <img src="/images/shutterstock_137332160.jpg" />
+                    </section>
                 </section>
                 <section>
                     <section>
-                        <h1>Further</h1>
+                        <h2>Questions & Discussion</h2>
                     </section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
-                    <section>Vertical Slide 2</section>
                 </section>
                 <section>
-                    <h1>Credits</h1>
+                    <h2>References</h2>
+                    <ul>
+                        <li>
+                            <a href="http://www.slideshare.net/girishbapat/getting-started-with-agile-database-migrations-for-java-flywaydb?next_slideshow=1"  target="_blank">
+                                Getting started with agile database migrations for java flywaydb
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Credits</h2>
                     <ul>
                         <li>reveal.js <a href="https://github.com/hakimel/reveal.js" target="_blank">https://github.com/hakimel/reveal.js</a></li>
                         <li>highlightjs <a href="http://highlightjs.org/" target="_blank">highlightjs.org</a></li>
